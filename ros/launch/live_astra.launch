@@ -1,0 +1,53 @@
+<launch>
+    <arg name="localize_only"   value="true" />
+    <arg name="enable_pangolin" value="false" />
+    <arg name="map_name"        value="orb_slam3" />
+
+    <!-- If use rosbag -->
+    <arg name="use_sim_time"    value="true" />
+
+    <!-- ORB-SLAM3 -->
+    <node name="orb_slam3_rbgd" pkg="orb_slam3_ros" type="orb_slam3_ros_rgbd" output="screen">
+        <!-- From realsense2_camera node -->
+        <remap from="/camera/rgb/image_raw"                 to="/camera/rgb/image_aligned"/>
+        <remap from="/camera/depth_registered/image_raw"    to="/camera/depth/image_aligned"/>
+
+        <!-- Parameters for original ORB-SLAM3 -->
+        <param name="voc_file"      type="string"   value="$(find orb_slam3_ros)/ros/config/ORBvoc.txt" />
+        <!-- <param name="voc_file"      type="string"   value="$(find orb_slam3_ros)/config/GCNvoc.bin" /> -->
+        <param name="settings_file" type="string"   value="$(find orb_slam3_ros)/ros/config/astra.yaml" />
+
+        <!-- Parameters for ROS -->
+        <param name="world_frame_id"    type="string"   value="map" />
+        <param name="cam_frame_id"      type="string"   value="camera_link" />
+        <param name="base_frame_id "    type="string"   value="base_link" />
+
+        <!-- Operation params -->
+        <param name="localize_only"     type="bool" value="$(arg localize_only)" />
+        <param name="enable_pangolin"   type="bool" value="$(arg enable_pangolin)" />
+    </node>
+
+    <!-- Grid map 2d -->
+    <node name="orb_slam3_ros_gridmap" pkg="orb_slam3_ros" type="orb_slam3_ros_gridmap" output="screen">
+        <param name="localize_only" type="bool"     value="$(arg localize_only)" />
+        <param name="map_name"      type="string"   value="$(arg map_name)" />
+
+        <param name="thresh_max_z"      type="double"   value="0.3" />
+        <param name="thresh_min_z"      type="double"   value="-0.1" />
+
+        <param name="cloud_max_x"       type="double"   value="10.0" />
+        <param name="cloud_min_x"       type="double"   value="-10.0" />
+        <param name="cloud_max_y"       type="double"   value="10.0" />
+        <param name="cloud_min_y"       type="double"   value="-10.0" />
+    </node>
+
+    <!-- Visualization - RViz-->
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find orb_slam3_ros)/ros/config/rviz_config.rviz" />
+
+    <!-- <node pkg="hector_trajectory_server" type="hector_trajectory_server" name="trajectory_server_orb_slam3" >
+        <param name="/target_frame_name" value="/map" />
+        <param name="/source_frame_name" value="/base_link" />
+        <param name="/trajectory_update_rate" value="20.0" />
+        <param name="/trajectory_publish_rate" value="20.0" />
+    </node> -->
+</launch>
